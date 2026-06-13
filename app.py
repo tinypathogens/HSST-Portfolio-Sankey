@@ -329,6 +329,42 @@ with st.form("add_evidence_form"):
 
 st.markdown("---")
 
+st.subheader("Delete evidence item")
+if not evidence.empty:
+    evidence_items = evidence[["EOAID", "EOATitle"]].drop_duplicates().sort_values("EOAID")
+    evidence_options = [f"{eoaid}: {title}" for eoaid, title in zip(evidence_items["EOAID"], evidence_items["EOATitle"])]
+    
+    selected_delete = st.selectbox(
+        "Select evidence item to delete",
+        options=evidence_options,
+        key="delete_selectbox"
+    )
+    
+    if selected_delete:
+        delete_eoaid = selected_delete.split(":")[0].strip()
+        delete_title = selected_delete.split(":", 1)[1].strip()
+        
+        st.info(f"**Evidence to delete:** {delete_eoaid} — {delete_title}")
+        
+        confirm_delete = st.checkbox(
+            "I understand this will remove all mappings for this evidence item.",
+            key="delete_confirmation"
+        )
+        
+        if st.button("Delete selected evidence", type="secondary"):
+            if confirm_delete:
+                # Remove all rows where EOAID matches
+                evidence = evidence[evidence["EOAID"] != delete_eoaid]
+                save_evidence(evidence)
+                st.success(f"Deleted evidence item {delete_eoaid}: {delete_title}")
+                st.rerun()
+            else:
+                st.error("Please confirm before deleting.")
+else:
+    st.info("No evidence items to delete.")
+
+st.markdown("---")
+
 col1, col2, col3 = st.columns(3)
 col1.metric("Curriculum modules", len(curriculum))
 col2.metric("SoP criteria", len(sop))
