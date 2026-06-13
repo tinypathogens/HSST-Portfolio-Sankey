@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-
+import plotly.graph_objects as go
 st.set_page_config(
     page_title="HSST Portfolio Sankey",
     layout="wide"
@@ -111,3 +111,54 @@ else:
 
 st.subheader("Selected view mode")
 st.write(view_mode)
+# Build Sankey diagram
+st.subheader("Portfolio Sankey Diagram")
+
+if evidence.empty:
+    st.info("Add evidence above to generate a Sankey diagram.")
+else:
+    curriculum_mappings = evidence[evidence["MappingType"] == "Curriculum"]
+    sop_mappings = evidence[evidence["MappingType"] == "SoP"]
+
+    links = []
+
+    for _, row in curriculum_mappings.iterrows():
+        source = row["TargetID"]
+        target = f"{row['EOAID']}: {row['EOATitle']}"
+        links.append((source, target, row["Weight"]))
+
+    for _, row in sop_mappings.iterrows():
+        source = f"{row['EOAID']}: {row['EOATitle']}"
+        target = row["TargetID"]
+        links.append((source, target, row["Weight"]))
+
+    labels = list(pd.unique([item for link in links for item in link[:2]]))
+
+    source_indices = [labels.index(link[0]) for link in links]
+    target_indices = [labels.index(link[1]) for link in links]
+    values = [link[2] for link in links]
+
+    fig = go.Figure(
+        data=[
+            go.Sankey(
+                node=dict(
+                    pad=20,
+                    thickness=18,
+                    label=labels
+                ),
+                link=dict(
+                    source=source_indices,
+                    target=target_indices,
+                    value=values
+                )
+            )
+        ]
+    )
+
+    fig.update_layout(
+        title_text="Curriculum → EOA → SoP Criterion",
+        font_size=11,
+        height=700
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
