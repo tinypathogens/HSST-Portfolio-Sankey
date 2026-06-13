@@ -79,7 +79,7 @@ def build_sankey(evidence, curriculum, sop):
 
         links.append((source, target, row["Weight"]))
 
-labels = list(dict.fromkeys([value for pair in links for value in pair[:2]]))
+    labels = list(dict.fromkeys([value for pair in links for value in pair[:2]]))
 
     node_info = []
     for label in labels:
