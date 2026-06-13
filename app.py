@@ -31,6 +31,32 @@ view_mode = st.sidebar.radio(
         "Show gaps"
     ]
 )
+filtered_evidence = evidence.copy()
+
+if view_mode == "Focus on one EOA":
+    if evidence.empty:
+        st.sidebar.info("No EOAs available yet.")
+    else:
+        eoa_options = (
+            evidence[["EOAID", "EOATitle"]]
+            .drop_duplicates()
+            .assign(Display=lambda x: x["EOAID"] + ": " + x["EOATitle"])
+        )
+
+        selected_eoa = st.sidebar.selectbox(
+            "Select EOA",
+            options=eoa_options["Display"].tolist()
+        )
+
+        selected_eoa_id = eoa_options.loc[
+            eoa_options["Display"] == selected_eoa,
+            "EOAID"
+        ].iloc[0]
+
+        filtered_evidence = evidence[
+            evidence["EOAID"] == selected_eoa_id
+        ]
+        
 # Add new evidence form
 st.subheader("Add New Evidence")
 
