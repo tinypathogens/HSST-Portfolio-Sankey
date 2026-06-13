@@ -61,8 +61,19 @@ if view_mode == "Focus on one EOA":
 st.subheader("Add New Evidence")
 
 with st.form("add_evidence_form"):
-    eoa_id = st.text_input("EOA ID", placeholder="EOA1")
-    eoa_title = st.text_input("EOA Title", placeholder="FRCPath Part 1 Pass")
+    evidence_id = st.text_input("Evidence ID", placeholder="EOA1")
+
+    evidence_type = st.selectbox(
+        "Evidence Type",
+        [
+            "Evidence of Activity (EOA)",
+            "Case-Based Discussion (CBD)",
+            "Multi-Source Feedback (MSF)",
+            "Training Plan Event"
+        ]
+    )
+
+    evidence_title = st.text_input("Evidence Title", placeholder="FRCPath Part 1 Pass")
 
     st.markdown("### Curriculum Modules")
 
@@ -91,15 +102,15 @@ with st.form("add_evidence_form"):
     submitted = st.form_submit_button("Save Evidence")
 
     if submitted:
-        if not eoa_id or not eoa_title:
-            st.error("Please enter both an EOA ID and an EOA title.")
+        if not evidence_id or not evidence_title:
+            st.error("Please enter both an Evidence ID and an Evidence Title.")
         else:
             new_rows = []
 
             for label in selected_curriculum_labels:
                 new_rows.append({
-                    "EOAID": eoa_id,
-                    "EOATitle": eoa_title,
+                    "EOAID": evidence_id,
+                    "EOATitle": evidence_title,
                     "MappingType": "Curriculum",
                     "TargetID": curriculum_options[label],
                     "Weight": 1
@@ -107,8 +118,8 @@ with st.form("add_evidence_form"):
 
             for label in selected_sop_labels:
                 new_rows.append({
-                    "EOAID": eoa_id,
-                    "EOATitle": eoa_title,
+                    "EOAID": evidence_id,
+                    "EOATitle": evidence_title,
                     "MappingType": "SoP",
                     "TargetID": sop_options[label],
                     "Weight": 1
@@ -118,7 +129,7 @@ with st.form("add_evidence_form"):
                 new_data = pd.DataFrame(new_rows)
                 evidence = pd.concat([evidence, new_data], ignore_index=True)
                 evidence.to_csv("data/evidence.csv", index=False)
-                st.success(f"{eoa_id}: {eoa_title} saved successfully.")
+                st.success(f"{evidence_id}: {evidence_title} saved successfully.")
                 st.rerun()
             else:
                 st.warning("Please select at least one curriculum module or SoP criterion.")
