@@ -1,25 +1,106 @@
-EOAID,EOATitle,MappingType,TargetID,Weight
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS210,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS211,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS212,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS213,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS214,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HCC320,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS266,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS275,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS276,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS277,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS278,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS279,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS282,1
-EOA1,FRCPath Part 1 Pass,Curriculum,HLS283,1
-EOA1,FRCPath Part 1 Pass,SoP,1.1,1
-EOA1,FRCPath Part 1 Pass,SoP,5.4,1
-EOA1,FRCPath Part 1 Pass,SoP,6.2,1
-EOA1,FRCPath Part 1 Pass,SoP,6.4,1
-EOA1,FRCPath Part 1 Pass,SoP,10.4,1
-CBD1,MATERNAL HCV,Curriculum,HLS210,1
-CBD1,MATERNAL HCV,Curriculum,HLS211,1
-CBD1,MATERNAL HCV,SoP,2.4,1
-CBD1,MATERNAL HCV,SoP,2.1,1
-CBD1,MATERNAL HCV,SoP,2.2,1
+EOAID,EOATitle,EvidenceType,MappingType,TargetID,Weight
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS210,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS211,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS212,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS213,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS214,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HCC320,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS266,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS275,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS276,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS277,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS278,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS279,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS282,1
+EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS283,1
+EOA1,FRCPath Part 1 Pass,Unspecified,SoP,1.1,1
+EOA1,FRCPath Part 1 Pass,Unspecified,SoP,5.4,1
+EOA1,FRCPath Part 1 Pass,Unspecified,SoP,6.2,1
+EOA1,FRCPath Part 1 Pass,Unspecified,SoP,6.4,1
+EOA1,FRCPath Part 1 Pass,Unspecified,SoP,10.4,1
+CBD1,MATERNAL HCV,Unspecified,Curriculum,HLS210,1
+CBD1,MATERNAL HCV,Unspecified,Curriculum,HLS211,1
+CBD1,MATERNAL HCV,Unspecified,SoP,2.4,1
+CBD1,MATERNAL HCV,Unspecified,SoP,2.1,1
+CBD1,MATERNAL HCV,Unspecified,SoP,2.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS210,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS213,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HCC322,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS281,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS279,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS280,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS283,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS282,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS285,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS277,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS275,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS274,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HCC323,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HCC320,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS214,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HCC321,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS266,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS276,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS278,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS212,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS284,1
+EOA2,TEST 2,Evidence of Activity (EOA),Curriculum,HLS211,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,2.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,2.5,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,2.6,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,3.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,3.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,3.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,3.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,3.5,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,3.6,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.5,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.6,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.7,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,4.8,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,5.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,5.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,5.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,5.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,5.5,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,6.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,6.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,6.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,6.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,7.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,7.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,7.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,8.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,8.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,8.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,9.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,9.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,9.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,10.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,10.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,10.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,10.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,11.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,11.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,11.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,12.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,12.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,12.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,2.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,2.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,2.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,13.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,13.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,14.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,14.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,15.1,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,15.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,15.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,15.4,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,1.3,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,1.2,1
+EOA2,TEST 2,Evidence of Activity (EOA),SoP,1.1,1
