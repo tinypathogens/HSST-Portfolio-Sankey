@@ -1,0 +1,23 @@
+CurriculumID,CurriculumText,Stage,Status,NodeLabel
+HLS210,Antimicrobial chemotherapy,Stage One,Compulsory,HLS210: Antimicrobial chemotherapy
+HLS211,Clinical presentation and management of infection,Stage One,Compulsory,HLS211: Clinical presentation and management of infection
+HLS212,Health and safety in microbiological and virological practice,Stage One,Compulsory,HLS212: Health and safety in microbiological and virological practice
+HLS213,Laboratory aspects of microbiology and virology,Stage One,Compulsory,HLS213: Laboratory aspects of microbiology and virology
+HLS214,The role of microbiology and virology in infection prevention and control,Stage One,Compulsory,HLS214: The role of microbiology and virology in infection prevention and control
+HCC320,Developing independent professional practice,Stage Two,Compulsory,HCC320: Developing independent professional practice
+HCC321,"Research, development and innovation",Stage Two,Compulsory,"HCC321: Research, development and innovation"
+HCC322,Training and education,Stage Two,Compulsory,HCC322: Training and education
+HCC323,Leadership and management,Stage Two,Compulsory,HCC323: Leadership and management
+HLS266,Public Health and Epidemiology,Stage Two,Compulsory,HLS266: Public Health and Epidemiology
+HLS274,Virology Management,Stage Two,Compulsory,HLS274: Virology Management
+HLS275,Basic Virology,Stage Two,Compulsory,HLS275: Basic Virology
+HLS276,Laboratory techniques general,Stage Two,Compulsory,HLS276: Laboratory techniques general
+HLS277,Laboratory techniques specific,Stage Two,Compulsory,HLS277: Laboratory techniques specific
+HLS278,Laboratory techniques interpretation,Stage Two,Compulsory,HLS278: Laboratory techniques interpretation
+HLS279,Clinical and treatment aspects,Stage Two,Compulsory,HLS279: Clinical and treatment aspects
+HLS280,Understanding research and development in virology,Stage Two,Compulsory,HLS280: Understanding research and development in virology
+HLS281,Virology Supraregional reference laboratory attachment,Stage Two,Optional,HLS281: Virology Supraregional reference laboratory attachment
+HLS282,Anti viral susceptibility,Stage Two,Optional,HLS282: Anti viral susceptibility
+HLS283,Exotic and dangerous virus infections,Stage Two,Optional,HLS283: Exotic and dangerous virus infections
+HLS284,Microbiology attachment,Stage Two,Optional,HLS284: Microbiology attachment
+HLS285,Further developing virology subspecialty skills,Stage Two,Optional,HLS285: Further developing virology subspecialty skills
