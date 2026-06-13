@@ -124,6 +124,19 @@ def build_sankey(evidence, curriculum, sop):
     target_indices = [labels.index(link[1]) for link in links]
     values = [link[2] for link in links]
 
+    # Assign colors by node type
+    node_colors = []
+    for item in node_info:
+        if item["type"] == "Curriculum":
+            node_colors.append("blue")
+        elif item["type"] == "Evidence":
+            node_colors.append("orange")
+        elif item["type"] == "SoP":
+            node_colors.append("green")
+    
+    # Light grey transparent links
+    link_colors = ["rgba(128, 128, 128, 0.3)" for _ in links]
+
     figure = go.Figure(
         data=[
             go.Sankey(
@@ -131,14 +144,15 @@ def build_sankey(evidence, curriculum, sop):
                     pad=18,
                     thickness=18,
                     label=labels,
+                    color=node_colors,
                     customdata=hover_text,
                     hovertemplate="%{customdata}<extra></extra>",
                 ),
-                link=dict(source=source_indices, target=target_indices, value=values),
+                link=dict(source=source_indices, target=target_indices, value=values, color=link_colors),
             )
         ]
     )
-    figure.update_layout(title_text="Curriculum → Evidence → SoP Criterion", font_size=10, height=600)
+    figure.update_layout(title_text="Curriculum → Evidence → SoP Criterion", font_size=11, height=1000)
     return figure, node_info
 
 
