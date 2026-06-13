@@ -414,6 +414,40 @@ def display_top_evidence_items(evidence):
             st.write(str(row["MappingCount"]))
 
 
+def display_sankey_exports(figure, view_title):
+    """Display export buttons for the Sankey diagram."""
+    st.markdown("#### Download Sankey Diagram")
+    export_cols = st.columns(2)
+    
+    with export_cols[0]:
+        # PNG export
+        try:
+            png_image = figure.to_image(format="png", width=1200, height=1000)
+            st.download_button(
+                label="📥 Download as PNG",
+                data=png_image,
+                file_name=f"sankey_{view_title.lower().replace(' ', '_').replace(':', '')}.png",
+                mime="image/png",
+                use_container_width=True,
+            )
+        except Exception:
+            st.warning("PNG export requires kaleido. SVG export available.")
+    
+    with export_cols[1]:
+        # SVG export
+        try:
+            svg_image = figure.to_image(format="svg", width=1200, height=1000)
+            st.download_button(
+                label="📥 Download as SVG",
+                data=svg_image,
+                file_name=f"sankey_{view_title.lower().replace(' ', '_').replace(':', '')}.svg",
+                mime="image/svg+xml",
+                use_container_width=True,
+            )
+        except Exception:
+            st.info("SVG export available via Plotly menu (camera icon).")
+
+
 curriculum, sop, evidence = load_data()
 
 # Sidebar controls
@@ -661,6 +695,8 @@ elif st.session_state.generate_sankey:
             sankey_fig, node_info = build_sankey(evidence, curriculum, sop)
             if sankey_fig is not None:
                 st.plotly_chart(sankey_fig, use_container_width=True)
+                display_sankey_exports(sankey_fig, "Full Portfolio")
+                st.markdown("---")
                 display_node_details(node_info, curriculum, sop)
 
     elif view_mode == "Focus on selected evidence item(s)":
@@ -677,6 +713,8 @@ elif st.session_state.generate_sankey:
                 sankey_fig, node_info = build_sankey(filtered, curriculum, sop)
                 if sankey_fig is not None:
                     st.plotly_chart(sankey_fig, use_container_width=True)
+                    display_sankey_exports(sankey_fig, "Selected Evidence")
+                    st.markdown("---")
                     display_node_details(node_info, curriculum, sop)
 
     elif view_mode == "Focus by evidence type":
@@ -694,6 +732,8 @@ elif st.session_state.generate_sankey:
             sankey_fig, node_info = build_sankey(filtered, curriculum, sop)
             if sankey_fig is not None:
                 st.plotly_chart(sankey_fig, use_container_width=True)
+                display_sankey_exports(sankey_fig, selected_evidence_type)
+                st.markdown("---")
                 display_node_details(node_info, curriculum, sop)
 else:
     st.info("Click **Generate Sankey** in the sidebar to visualize the mappings.")
