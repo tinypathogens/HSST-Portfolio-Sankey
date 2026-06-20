@@ -1,23 +1,4 @@
 EOAID,EOATitle,EvidenceType,MappingType,TargetID,Weight
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS210,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS211,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS212,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS213,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS214,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HCC320,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS266,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS275,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS276,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS277,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS278,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS279,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS282,1
-EOA1,FRCPath Part 1 Pass,Unspecified,Curriculum,HLS283,1
-EOA1,FRCPath Part 1 Pass,Unspecified,SoP,1.1,1
-EOA1,FRCPath Part 1 Pass,Unspecified,SoP,5.4,1
-EOA1,FRCPath Part 1 Pass,Unspecified,SoP,6.2,1
-EOA1,FRCPath Part 1 Pass,Unspecified,SoP,6.4,1
-EOA1,FRCPath Part 1 Pass,Unspecified,SoP,10.4,1
 CBD1,MATERNAL HCV,Unspecified,Curriculum,HLS210,1
 CBD1,MATERNAL HCV,Unspecified,Curriculum,HLS211,1
 CBD1,MATERNAL HCV,Unspecified,SoP,2.4,1
@@ -104,3 +85,23 @@ EOA2,TEST 2,Evidence of Activity (EOA),SoP,15.4,1
 EOA2,TEST 2,Evidence of Activity (EOA),SoP,1.3,1
 EOA2,TEST 2,Evidence of Activity (EOA),SoP,1.2,1
 EOA2,TEST 2,Evidence of Activity (EOA),SoP,1.1,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS210,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS211,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS212,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS213,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS214,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HCC320,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS266,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS275,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS276,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS277,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS278,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS279,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS282,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),Curriculum,HLS283,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),SoP,1.1,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),SoP,5.4,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),SoP,6.2,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),SoP,6.4,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),SoP,8.1,1
+EOA1,FRCPath Part 1,Evidence of Activity (EOA),SoP,10.4,1

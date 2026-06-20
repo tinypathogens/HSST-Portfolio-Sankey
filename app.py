@@ -1,23 +1,155 @@
+import json
 import pandas as pd
 import re
+from io import BytesIO
+from pathlib import Path
 import streamlit as st
 import plotly.graph_objects as go
-from pathlib import Path
+import storage
 
-DATA_DIR = Path("data")
-CURRICULUM_FILE = DATA_DIR / "curriculum.csv"
-SOP_FILE = DATA_DIR / "sop.csv"
-EVIDENCE_FILE = DATA_DIR / "evidence.csv"
+
+def apply_visual_style():
+    st.markdown(
+        """
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap');
+
+        html, body, [class*="css"]  {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .main .block-container {
+            max-width: 1080px;
+            padding-top: 2.2rem;
+            padding-left: 3.2rem;
+            padding-right: 2.4rem;
+        }
+
+        h1 {
+            color: #0a1428;
+            font-size: 3.85rem;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            margin-bottom: 0.35rem;
+        }
+
+        .main p {
+            color: #4d5a6a;
+            font-size: 1.14rem;
+            line-height: 1.45;
+        }
+
+        hr.hero-divider {
+            border: none;
+            border-top: 1px solid #d4dae3;
+            margin: 1.15rem 0 1.35rem 0;
+        }
+
+        div[data-testid="stAlert"] {
+            background: #f4f7fb;
+            border: 1px solid #dbe2ed;
+            border-radius: 8px;
+            color: #4d5a6a;
+            padding-top: 0.35rem;
+            padding-bottom: 0.35rem;
+        }
+
+        section[data-testid="stSidebar"] {
+            background: linear-gradient(180deg, #f6f8fb 0%, #f3f5f8 100%);
+            border-right: 1px solid #d9e0ea;
+        }
+
+        section[data-testid="stSidebar"] .block-container {
+            padding-top: 1.5rem;
+            padding-left: 1.1rem;
+            padding-right: 1.1rem;
+        }
+
+        section[data-testid="stSidebar"] h3 {
+            margin-top: 0.2rem;
+            margin-bottom: 0.45rem;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        section[data-testid="stSidebar"] hr {
+            border: none;
+            border-top: 1px solid #d5dce7;
+            margin: 0.85rem 0 0.95rem 0;
+        }
+
+        section[data-testid="stSidebar"] .stRadio > div {
+            gap: 0.35rem;
+        }
+
+        section[data-testid="stSidebar"] .stRadio label {
+            border-radius: 9px;
+            border: 1px solid transparent;
+            padding: 0.56rem 0.72rem;
+            margin: 0;
+            transition: background-color 120ms ease, border-color 120ms ease;
+        }
+
+        section[data-testid="stSidebar"] .stRadio label:hover {
+            background: #eef3fa;
+            border-color: #dbe6f5;
+        }
+
+        section[data-testid="stSidebar"] .stRadio label:has(input:checked) {
+            background: #e8f0fb;
+            border-color: #cdddf5;
+            color: #005eb8;
+            font-weight: 700;
+        }
+
+        section[data-testid="stSidebar"] .stDownloadButton button,
+        section[data-testid="stSidebar"] .stButton button {
+            border-radius: 8px;
+            min-height: 2.45rem;
+            font-weight: 600;
+        }
+
+        section[data-testid="stSidebar"] .stMetric {
+            padding-top: 0.2rem;
+            padding-bottom: 0.2rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 st.set_page_config(page_title="HSST Virology Portfolio Sankey", layout="wide")
-st.title("HSST Virology Portfolio Sankey")
-st.write("Map evidence items to HSST Virology curriculum modules and SoP criteria.")
+apply_visual_style()
+st.title("HSST Portfolio Mapper")
+st.write("Map evidence items to HSST curriculum modules and SoP criteria.")
+st.markdown("<hr class='hero-divider' />", unsafe_allow_html=True)
+st.info("Evidence is stored locally on this computer. Nothing is uploaded online unless you choose to share it.")
 
+storage.initialize_database()
+specialty_registry = storage.load_specialty_registry_dataframe()
+if specialty_registry.empty:
+    specialty_registry = storage.refresh_specialty_registry_from_nshcs()
 
-def load_csv(path, columns=None):
-    if not path.exists():
-        return pd.DataFrame(columns=columns) if columns is not None else pd.DataFrame()
-    return pd.read_csv(path, dtype=str)
+if "selected_specialty_code" not in st.session_state:
+    if not specialty_registry.empty and storage.DEFAULT_SPECIALTY_CODE in set(specialty_registry["CurriculumCode"]):
+        st.session_state.selected_specialty_code = storage.DEFAULT_SPECIALTY_CODE
+    elif not specialty_registry.empty:
+        st.session_state.selected_specialty_code = specialty_registry.iloc[0]["CurriculumCode"]
+    else:
+        st.session_state.selected_specialty_code = storage.DEFAULT_SPECIALTY_CODE
+
+evidence = storage.load_evidence_dataframe(st.session_state.selected_specialty_code)
+
+st.sidebar.markdown(
+    """
+    <div style="color:#005EB8; font-weight:700; text-align:left; line-height:1.2; margin-bottom:0.25rem; font-size:2.15rem;">
+        National School<br>of Healthcare Science
+    </div>
+    <hr style="border:none; border-top:1px solid #005EB8; margin:0.25rem 0 0.9rem 0;" />
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def natural_sort_key(value):
@@ -31,30 +163,120 @@ def safe_filename(text):
     return text.strip("_")
 
 
-def load_data():
-    curriculum = load_csv(CURRICULUM_FILE)
-    sop = load_csv(SOP_FILE)
-    evidence = load_csv(EVIDENCE_FILE)
+def dataframe_csv_bytes(frame):
+    return frame.to_csv(index=False).encode("utf-8")
 
-    required_columns = ["EOAID", "EOATitle", "EvidenceType", "MappingType", "TargetID", "Weight"]
-    for column in required_columns:
-        if column not in evidence.columns:
-            evidence[column] = pd.NA
 
-    evidence = evidence[required_columns].copy()
-    evidence["Weight"] = pd.to_numeric(evidence["Weight"], errors="coerce").fillna(1).astype(int)
-    evidence["EvidenceType"] = evidence["EvidenceType"].fillna("Unspecified").astype(str)
+def dataframe_excel_bytes(curriculum_code):
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        storage.load_evidence_items_dataframe(curriculum_code).to_excel(writer, sheet_name="Evidence Items", index=False)
+        storage.load_evidence_dataframe(curriculum_code).to_excel(writer, sheet_name="Evidence Mappings", index=False)
+        storage.load_curriculum_dataframe(curriculum_code).to_excel(writer, sheet_name="Curriculum", index=False)
+        storage.load_sop_dataframe().to_excel(writer, sheet_name="SoP Criteria", index=False)
+    output.seek(0)
+    return output.getvalue()
 
+
+def display_import_summary(summary):
+    imported_items = int(summary.get("imported_items", 0) or 0)
+    skipped_items = int(summary.get("skipped_items", 0) or 0)
+    skipped_examples = summary.get("skipped_examples", []) or []
+
+    st.markdown(
+        f"Imported items: **{imported_items}**  \nSkipped items: **{skipped_items}**"
+    )
+
+    if skipped_examples:
+        st.caption("Skipped examples: " + "; ".join(str(example) for example in skipped_examples[:5]))
+
+
+def load_data(curriculum_code):
+    curriculum = storage.load_curriculum_dataframe(curriculum_code)
+    sop = storage.load_sop_dataframe()
+    evidence = storage.load_evidence_dataframe(curriculum_code)
     return curriculum, sop, evidence
 
 
-def save_evidence(df):
-    df.to_csv(EVIDENCE_FILE, index=False)
+def calculate_portfolio_summary(curriculum, sop, evidence, evidence_items):
+    mapped_evidence_ids = set(evidence["EOAID"].dropna().astype(str).tolist()) if not evidence.empty else set()
+    total_evidence_items = len(evidence_items["EOAID"].dropna().astype(str).unique()) if not evidence_items.empty else 0
+
+    mapped_curriculum_modules = len(
+        evidence[evidence["MappingType"] == "Curriculum"]["TargetID"].dropna().astype(str).unique()
+    ) if not evidence.empty else 0
+
+    sop_domain_lookup = sop.set_index("SoPID")["DomainID"].to_dict() if not sop.empty else {}
+    mapped_sop_domains = {
+        sop_domain_lookup.get(str(target_id), "")
+        for target_id in evidence[evidence["MappingType"] == "SoP"]["TargetID"].dropna().astype(str).tolist()
+    } if not evidence.empty else set()
+    mapped_sop_domains = {domain for domain in mapped_sop_domains if domain}
+
+    unmapped_evidence_items = max(total_evidence_items - len(mapped_evidence_ids), 0)
+    curriculum_total = len(curriculum)
+    curriculum_coverage_pct = round((mapped_curriculum_modules / curriculum_total * 100), 1) if curriculum_total else 0.0
+
+    return {
+        "total_evidence_items": total_evidence_items,
+        "mapped_curriculum_modules": mapped_curriculum_modules,
+        "mapped_sop_domains": len(mapped_sop_domains),
+        "unmapped_evidence_items": unmapped_evidence_items,
+        "curriculum_coverage_pct": curriculum_coverage_pct,
+    }
 
 
-def build_sankey(evidence, curriculum, sop):
+def prepare_sankey_data(evidence, curriculum, sop, selected_evidence_ids=None, selected_curriculum_code=None):
+    debug_summary = {
+        "selected_evidence_count": 0,
+        "curriculum_links_count": 0,
+        "sop_links_count": 0,
+        "unique_curriculum_nodes": 0,
+        "unique_sop_nodes": 0,
+    }
+
     if evidence.empty:
-        return None, []
+        return [], [], debug_summary, {}, {}
+
+    filtered = evidence.copy()
+    for column in ["EOAID", "EOATitle", "EvidenceType", "MappingType", "TargetID"]:
+        if column in filtered.columns:
+            filtered[column] = filtered[column].fillna("").astype(str).str.strip()
+
+    selected_ids = set()
+    if selected_evidence_ids:
+        selected_ids = {str(item).strip() for item in selected_evidence_ids if str(item).strip()}
+        filtered = filtered[filtered["EOAID"].isin(selected_ids)].copy()
+        debug_summary["selected_evidence_count"] = len(selected_ids)
+    else:
+        debug_summary["selected_evidence_count"] = filtered["EOAID"].nunique()
+
+    if selected_curriculum_code and "CurriculumCode" in filtered.columns:
+        target_code = str(selected_curriculum_code).strip()
+        filtered = filtered[filtered["CurriculumCode"].fillna("").astype(str).str.strip() == target_code].copy()
+
+    curriculum_ids = set(curriculum["CurriculumID"].fillna("").astype(str).tolist()) if not curriculum.empty else set()
+    sop_ids = set(sop["SoPID"].fillna("").astype(str).tolist()) if not sop.empty else set()
+
+    curriculum_links = filtered[
+        (filtered["MappingType"] == "Curriculum")
+        & filtered["TargetID"].isin(curriculum_ids)
+        & filtered["TargetID"].map(storage.is_valid_module_code)
+    ].copy()
+
+    sop_links = filtered[
+        (filtered["MappingType"] == "SoP")
+        & filtered["TargetID"].isin(sop_ids)
+    ].copy()
+
+    debug_summary["curriculum_links_count"] = len(curriculum_links)
+    debug_summary["sop_links_count"] = len(sop_links)
+    debug_summary["unique_curriculum_nodes"] = curriculum_links["TargetID"].nunique() if not curriculum_links.empty else 0
+    debug_summary["unique_sop_nodes"] = sop_links["TargetID"].nunique() if not sop_links.empty else 0
+
+    filtered = pd.concat([curriculum_links, sop_links], ignore_index=True)
+    if filtered.empty:
+        return [], [], debug_summary, {}, {}
 
     curriculum_text = curriculum.set_index("CurriculumID")["CurriculumText"].to_dict()
     curriculum_ids = curriculum.set_index("CurriculumID").index.tolist()
@@ -62,12 +284,12 @@ def build_sankey(evidence, curriculum, sop):
     sop_text = sop.set_index("SoPID")["SoPText"].to_dict()
     sop_ids = sop.set_index("SoPID").index.tolist()
 
-    evidence_titles = evidence.set_index("EOAID")["EOATitle"].to_dict()
-    evidence_types = evidence.set_index("EOAID")["EvidenceType"].to_dict()
+    evidence_titles = filtered.set_index("EOAID")["EOATitle"].to_dict()
+    evidence_types = filtered.set_index("EOAID")["EvidenceType"].to_dict()
 
     links = []
 
-    for _, row in evidence.iterrows():
+    for _, row in filtered.iterrows():
         if row["MappingType"] == "Curriculum":
             source = row["TargetID"]
             target = row["EOAID"]
@@ -78,6 +300,9 @@ def build_sankey(evidence, curriculum, sop):
             continue
 
         links.append((source, target, row["Weight"]))
+
+    if not links:
+        return [], [], debug_summary, {}, {}
 
     labels = list(dict.fromkeys([value for pair in links for value in pair[:2]]))
 
@@ -102,6 +327,26 @@ def build_sankey(evidence, curriculum, sop):
                 "description": evidence_titles.get(label, ""),
                 "evidence_type": evidence_types.get(label, ""),
             })
+
+    return links, node_info, debug_summary, evidence_titles, evidence_types
+
+
+def build_sankey(evidence, curriculum, sop, selected_evidence_ids=None, selected_curriculum_code=None):
+    links, node_info, debug_summary, _, _ = prepare_sankey_data(
+        evidence,
+        curriculum,
+        sop,
+        selected_evidence_ids=selected_evidence_ids,
+        selected_curriculum_code=selected_curriculum_code,
+    )
+
+    if not links:
+        return None, [], debug_summary
+
+    curriculum_text = curriculum.set_index("CurriculumID")["CurriculumText"].to_dict()
+    sop_text = sop.set_index("SoPID")["SoPText"].to_dict()
+
+    labels = list(dict.fromkeys([value for pair in links for value in pair[:2]]))
 
     order = {"Curriculum": 0, "Evidence": 1, "SoP": 2}
     node_info = sorted(
@@ -168,7 +413,64 @@ def build_sankey(evidence, curriculum, sop):
         margin=dict(l=20, r=20, t=50, b=20),
     )
 
-    return figure, node_info
+    return figure, node_info, debug_summary
+
+
+def display_sankey_debug_summary(debug_summary):
+    st.caption(
+        " | ".join([
+            f"Selected evidence: {debug_summary.get('selected_evidence_count', 0)}",
+            f"Curriculum links: {debug_summary.get('curriculum_links_count', 0)}",
+            f"SoP links: {debug_summary.get('sop_links_count', 0)}",
+            f"Unique curriculum nodes: {debug_summary.get('unique_curriculum_nodes', 0)}",
+            f"Unique SoP nodes: {debug_summary.get('unique_sop_nodes', 0)}",
+        ])
+    )
+
+
+def run_sankey_filter_smoke_test():
+    test_evidence = pd.DataFrame(
+        [
+            {"EOAID": "TEST-E1", "EOATitle": "Test evidence", "EvidenceType": "Evidence of Activity (EOA)", "MappingType": "Curriculum", "TargetID": "ABC001", "Weight": 1, "CurriculumCode": "TEST-CURR"},
+            {"EOAID": "TEST-E1", "EOATitle": "Test evidence", "EvidenceType": "Evidence of Activity (EOA)", "MappingType": "Curriculum", "TargetID": "ABC002", "Weight": 1, "CurriculumCode": "TEST-CURR"},
+            {"EOAID": "TEST-E1", "EOATitle": "Test evidence", "EvidenceType": "Evidence of Activity (EOA)", "MappingType": "SoP", "TargetID": "1", "Weight": 1, "CurriculumCode": "TEST-CURR"},
+            {"EOAID": "TEST-E2", "EOATitle": "Other evidence", "EvidenceType": "Evidence of Activity (EOA)", "MappingType": "Curriculum", "TargetID": "ABC999", "Weight": 1, "CurriculumCode": "TEST-CURR"},
+            {"EOAID": "TEST-E1", "EOATitle": "Test evidence", "EvidenceType": "Evidence of Activity (EOA)", "MappingType": "SoP", "TargetID": "99", "Weight": 1, "CurriculumCode": "TEST-CURR"},
+            {"EOAID": "TEST-E1", "EOATitle": "Test evidence", "EvidenceType": "Evidence of Activity (EOA)", "MappingType": "Curriculum", "TargetID": "XYZ123", "Weight": 1, "CurriculumCode": "OTHER-CURR"},
+        ]
+    )
+
+    test_curriculum = pd.DataFrame(
+        [
+            {"CurriculumID": "ABC001", "CurriculumText": "Module 1"},
+            {"CurriculumID": "ABC002", "CurriculumText": "Module 2"},
+        ]
+    )
+
+    test_sop = pd.DataFrame(
+        [
+            {"SoPID": "1", "SoPText": "Criterion 1"},
+        ]
+    )
+
+    links, _, debug_summary, _, _ = prepare_sankey_data(
+        test_evidence,
+        test_curriculum,
+        test_sop,
+        selected_evidence_ids=["TEST-E1"],
+        selected_curriculum_code="TEST-CURR",
+    )
+
+    expected = {
+        "selected_evidence_count": 1,
+        "curriculum_links_count": 2,
+        "sop_links_count": 1,
+        "unique_curriculum_nodes": 2,
+        "unique_sop_nodes": 1,
+    }
+
+    passed = len(links) == 3 and all(debug_summary.get(key) == value for key, value in expected.items())
+    return passed, debug_summary
 
 
 def display_node_details(node_info, curriculum, sop):
@@ -434,80 +736,327 @@ def display_top_evidence_items(evidence):
     st.dataframe(top_evidence, use_container_width=True, hide_index=True)
 
 
-def footer():
+def footer(curriculum_code):
 
     st.sidebar.markdown("---")
 
-    st.sidebar.caption("Created by James Griffiths | GitHub: tinypathogens")
+    st.sidebar.markdown("### Local Storage")
+    st.sidebar.caption(f"Database: {storage.get_database_path()}")
 
-curriculum, sop, evidence = load_data()
+    backup_file = st.sidebar.text_input("Backup filename", value="portfolio_backup.sqlite3")
+    if st.sidebar.button("Backup portfolio", use_container_width=True):
+        backup_path = storage.backup_database(backup_file)
+        st.sidebar.success(f"Saved backup to {backup_path}")
+        with open(backup_path, "rb") as backup_handle:
+            st.sidebar.download_button(
+                "Download backup file",
+                data=backup_handle.read(),
+                file_name=backup_path.name,
+                mime="application/x-sqlite3",
+                use_container_width=True,
+            )
 
-st.sidebar.markdown("### View Mode")
-view_mode = st.sidebar.radio(
-    "Select view",
-    [
-        "Full portfolio",
-        "Focus on selected evidence item(s)",
-        "Focus by evidence type",
-        "Portfolio Dashboard",
-        "Add evidence",
-        "Delete evidence",
-    ],
-    label_visibility="collapsed",
-)
+    restore_file = st.sidebar.file_uploader(
+        "Restore portfolio from backup",
+        type=["sqlite3", "db", "sqlite"],
+    )
+    if restore_file is not None and st.sidebar.button("Restore portfolio from backup", use_container_width=True):
+        temp_path = Path(storage.get_backup_dir()) / restore_file.name
+        temp_path.write_bytes(restore_file.getvalue())
+        storage.restore_database(temp_path)
+        st.sidebar.success("Backup restored. Reload the app to see the changes.")
+        st.rerun()
 
-if "generate_sankey" not in st.session_state:
-    st.session_state.generate_sankey = False
+    st.sidebar.download_button(
+        "Export CSV (evidence mappings)",
+        data=dataframe_csv_bytes(storage.load_evidence_dataframe(curriculum_code)),
+        file_name="evidence_mappings.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
+
+    st.sidebar.download_button(
+        "Export Excel workbook",
+        data=dataframe_excel_bytes(curriculum_code),
+        file_name="portfolio_export.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+    )
+
+    st.sidebar.caption("Created by James Griffiths")
+    st.sidebar.caption("GitHub: tinypathogens")
 
 if "selected_evidence_type_value" not in st.session_state:
     st.session_state.selected_evidence_type_value = "Evidence of Activity (EOA)"
 
-selected_evidence = []
-selected_evidence_type = st.session_state.selected_evidence_type_value
+if "generate_sankey" not in st.session_state:
+    st.session_state.generate_sankey = False
 
-if view_mode == "Focus on selected evidence item(s)":
-    st.sidebar.markdown("### Evidence Selection")
-    evidence_ids = get_evidence_items(evidence)
-    selected_evidence = st.sidebar.multiselect(
-        "Select evidence items",
-        options=evidence_ids,
-        default=None,
-    )
+if "evidence_section_mode" not in st.session_state:
+    st.session_state.evidence_section_mode = "Add evidence"
 
-elif view_mode == "Focus by evidence type":
-    st.sidebar.markdown("### Evidence Type")
-    evidence_type_options = [
-        "Evidence of Activity (EOA)",
-        "Case-Based Discussion (CBD)",
-        "Multi-Source Feedback (MSF)",
-        "Training Plan Event",
-    ]
-    selected_evidence_type = st.sidebar.selectbox(
-        "Select evidence type",
-        options=evidence_type_options,
-        index=evidence_type_options.index(st.session_state.selected_evidence_type_value)
-        if st.session_state.selected_evidence_type_value in evidence_type_options
-        else 0,
+sidebar_section = st.sidebar.radio(
+    "Navigation",
+    ["🏠 Home", "📖 Curricula", "📄 Evidence Items", "🔗 Sankey View", "📊 Dashboard", "⚙️ Settings"],
+    index=0,
+    label_visibility="collapsed",
+)
+
+selected_display = None
+specialty_row = {}
+selected_specialty_code = st.session_state.selected_specialty_code
+selected_needs_import = False
+
+if sidebar_section == "📖 Curricula":
+    st.sidebar.markdown("### Select specialty")
+    if specialty_registry.empty:
+        st.sidebar.info("No specialties are available yet. Refresh the registry from NSHCS.")
+    else:
+        specialty_registry = specialty_registry.copy()
+        specialty_registry["DisplayLabel"] = specialty_registry.apply(
+            lambda row: (
+                f"{row['SpecialtyName']} ({row['CurriculumCode']})"
+                if str(row.get("ImportStatus", "")).strip().lower() == "imported"
+                else f"{row['SpecialtyName']} ({row['CurriculumCode']}) - curriculum structure not imported yet"
+            ),
+            axis=1,
+        )
+        display_options = specialty_registry["DisplayLabel"].tolist()
+        default_display = specialty_registry.loc[
+            specialty_registry["CurriculumCode"] == st.session_state.selected_specialty_code,
+            "DisplayLabel",
+        ]
+        default_index = int(default_display.index[0]) if not default_display.empty else 0
+        selected_display = st.sidebar.selectbox(
+            "Select specialty",
+            options=display_options,
+            index=default_index if default_index < len(display_options) else 0,
+            label_visibility="collapsed",
+        )
+        specialty_row = specialty_registry.loc[specialty_registry["DisplayLabel"] == selected_display].iloc[0].to_dict()
+        selected_specialty_code = specialty_row["CurriculumCode"]
+        st.session_state.selected_specialty_code = selected_specialty_code
+        selected_import_status = str(specialty_row.get("ImportStatus", "")).strip().lower()
+        selected_needs_import = selected_import_status != "imported"
+
+        st.sidebar.caption(f"Selected: {specialty_row.get('SpecialtyName', selected_specialty_code)} | {specialty_row.get('CurriculumURL', '')}")
+
+        if "auto_import_attempted_codes" not in st.session_state:
+            st.session_state.auto_import_attempted_codes = []
+
+        if selected_needs_import and selected_specialty_code not in st.session_state.auto_import_attempted_codes:
+            st.session_state.auto_import_attempted_codes.append(selected_specialty_code)
+            try:
+                auto_summary = storage.import_specialty_from_source(selected_specialty_code, specialty_row.get("CurriculumURL"))
+                if int(auto_summary.get("imported_items", 0) or 0) > 0:
+                    st.rerun()
+            except Exception:
+                pass
+
+        st.sidebar.markdown("### Curriculum import status")
+        if selected_needs_import:
+            st.sidebar.warning("This curriculum structure is not imported yet.")
+        else:
+            st.sidebar.success("This curriculum structure is already imported.")
+
+        with st.sidebar.expander("Advanced settings", expanded=False):
+            st.caption("The specialty registry is seeded automatically on first run from the NSHCS curriculum library.")
+
+            if selected_needs_import and st.button("Import from NSHCS URL", use_container_width=True):
+                try:
+                    summary = storage.import_specialty_from_source(selected_specialty_code, specialty_row.get("CurriculumURL"))
+                    if int(summary.get("imported_items", 0) or 0) > 0:
+                        st.success(f"Imported {specialty_row.get('SpecialtyName', selected_specialty_code)}")
+                        display_import_summary(summary)
+                    else:
+                        st.warning(f"No valid curriculum items were imported for {specialty_row.get('SpecialtyName', selected_specialty_code)}")
+                        display_import_summary(summary)
+                    st.rerun()
+                except Exception as exc:
+                    st.error(f"NSHCS import failed: {exc}")
+                    st.info("You can use CSV/JSON import below as a fallback if you already have an exported curriculum file.")
+
+            if selected_needs_import:
+                csv_upload = st.file_uploader("Fallback import from CSV", type=["csv"], key="curriculum_csv_upload")
+                if csv_upload is not None and st.button("Import CSV into selected specialty", use_container_width=True):
+                    frame = pd.read_csv(BytesIO(csv_upload.getvalue()), dtype=str).fillna("")
+                    summary = storage.import_specialty_from_dataframe(frame, curriculum_code=selected_specialty_code, source_url=csv_upload.name)
+                    st.success(f"Imported CSV into {selected_specialty_code}")
+                    display_import_summary(summary)
+                    st.rerun()
+
+                json_upload = st.file_uploader("Fallback import from JSON", type=["json"], key="curriculum_json_upload")
+                if json_upload is not None and st.button("Import JSON into selected specialty", use_container_width=True):
+                    payload = json.loads(json_upload.getvalue().decode("utf-8"))
+                    frame = pd.DataFrame(payload if isinstance(payload, list) else payload.get("items", []))
+                    summary = storage.import_specialty_from_dataframe(frame.fillna(""), curriculum_code=selected_specialty_code, source_url=json_upload.name)
+                    st.success(f"Imported JSON into {selected_specialty_code}")
+                    display_import_summary(summary)
+                    st.rerun()
+            else:
+                st.caption("This curriculum structure is already imported.")
+
+            template_frame = storage.export_curriculum_template()
+            st.download_button(
+                "Export curriculum template",
+                data=template_frame.to_csv(index=False).encode("utf-8"),
+                file_name="curriculum_template.csv",
+                mime="text/csv",
+                use_container_width=True,
+            )
+
+            if st.button("Run Sankey filter smoke test", use_container_width=True):
+                passed, smoke_debug = run_sankey_filter_smoke_test()
+                if passed:
+                    st.success("Smoke test passed: 1 selected evidence item produced exactly 2 curriculum links + 1 SoP link.")
+                else:
+                    st.error("Smoke test failed: Sankey filtering did not match expected 2 curriculum links + 1 SoP link.")
+                display_sankey_debug_summary(smoke_debug)
+
+elif sidebar_section == "📄 Evidence Items":
+    st.sidebar.markdown("### Evidence management controls")
+    st.sidebar.radio(
+        "Evidence tools",
+        ["Add evidence", "Delete evidence"],
+        key="evidence_section_mode",
         label_visibility="collapsed",
     )
-    st.session_state.selected_evidence_type_value = selected_evidence_type
 
-if view_mode not in ["Portfolio Dashboard", "Add evidence", "Delete evidence"]:
+elif sidebar_section == "🔗 Sankey View":
+    st.sidebar.markdown("### Sankey scope")
+    st.sidebar.radio(
+        "Select Sankey view",
+        [
+            "Full portfolio",
+            "Focus on selected evidence item(s)",
+            "Focus by evidence type",
+        ],
+        key="sankey_view_mode",
+        label_visibility="collapsed",
+    )
+
+    if st.session_state.sankey_view_mode == "Focus on selected evidence item(s)":
+        st.sidebar.markdown("### Evidence Selection")
+        st.session_state.selected_evidence_ids = st.sidebar.multiselect(
+            "Select evidence items",
+            options=get_evidence_items(evidence),
+            default=None,
+        )
+    elif st.session_state.sankey_view_mode == "Focus by evidence type":
+        st.sidebar.markdown("### Evidence Type")
+        evidence_type_options = [
+            "Evidence of Activity (EOA)",
+            "Case-Based Discussion (CBD)",
+            "Multi-Source Feedback (MSF)",
+            "Training Plan Event",
+        ]
+        st.session_state.selected_evidence_type_value = st.sidebar.selectbox(
+            "Select evidence type",
+            options=evidence_type_options,
+            index=evidence_type_options.index(st.session_state.selected_evidence_type_value)
+            if st.session_state.selected_evidence_type_value in evidence_type_options
+            else 0,
+            label_visibility="collapsed",
+        )
+
     st.sidebar.markdown("---")
     if st.sidebar.button("Generate Sankey", use_container_width=True):
         st.session_state.generate_sankey = True
 
-st.sidebar.markdown("---")
+elif sidebar_section == "⚙️ Settings":
+    st.sidebar.markdown("### Local Storage")
+    st.sidebar.caption(f"Database: {storage.get_database_path()}")
 
-st.sidebar.markdown("### Portfolio Summary")
+    backup_file = st.sidebar.text_input("Backup filename", value="portfolio_backup.sqlite3")
+    if st.sidebar.button("Backup portfolio", use_container_width=True):
+        backup_path = storage.backup_database(backup_file)
+        st.sidebar.success(f"Saved backup to {backup_path}")
+        with open(backup_path, "rb") as backup_handle:
+            st.sidebar.download_button(
+                "Download backup file",
+                data=backup_handle.read(),
+                file_name=backup_path.name,
+                mime="application/x-sqlite3",
+                use_container_width=True,
+            )
 
-st.sidebar.metric("Curriculum modules", len(curriculum))
+    restore_file = st.sidebar.file_uploader(
+        "Restore portfolio from backup",
+        type=["sqlite3", "db", "sqlite"],
+    )
+    if restore_file is not None and st.sidebar.button("Restore portfolio from backup", use_container_width=True):
+        temp_path = Path(storage.get_backup_dir()) / restore_file.name
+        temp_path.write_bytes(restore_file.getvalue())
+        storage.restore_database(temp_path)
+        st.sidebar.success("Backup restored. Reload the app to see the changes.")
+        st.rerun()
 
-st.sidebar.metric("SoP criteria", len(sop))
+    st.sidebar.download_button(
+        "Export CSV (evidence mappings)",
+        data=dataframe_csv_bytes(storage.load_evidence_dataframe(selected_specialty_code)),
+        file_name="evidence_mappings.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
 
-st.sidebar.metric("Evidence mappings", len(evidence))
+    st.sidebar.download_button(
+        "Export Excel workbook",
+        data=dataframe_excel_bytes(selected_specialty_code),
+        file_name="portfolio_export.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True,
+    )
 
-if view_mode == "Add evidence":
+st.sidebar.caption("Created by James Griffiths")
+st.sidebar.caption("GitHub: tinypathogens")
+
+curriculum, sop, evidence = load_data(selected_specialty_code)
+
+if specialty_registry is not None and not specialty_registry.empty:
+    specialty_status = specialty_registry.loc[specialty_registry["CurriculumCode"] == selected_specialty_code, "ImportStatus"].astype(str)
+    if not specialty_status.empty and specialty_status.iloc[0].strip().lower() != "imported":
+        st.warning("This curriculum is listed but has not yet been imported. Please import it from the NSHCS curriculum library.")
+
+selected_sidebar_section = sidebar_section
+view_mode = st.session_state.get("evidence_section_mode", "Add evidence") if selected_sidebar_section == "📄 Evidence Items" else (
+    st.session_state.get("sankey_view_mode", "Full portfolio") if selected_sidebar_section == "🔗 Sankey View" else (
+        "Portfolio Dashboard" if selected_sidebar_section == "📊 Dashboard" else selected_sidebar_section
+    )
+)
+
+selected_evidence = st.session_state.get("selected_evidence_ids", [])
+selected_evidence_type = st.session_state.selected_evidence_type_value
+
+evidence_items_df = storage.load_evidence_items_dataframe(selected_specialty_code)
+portfolio_summary = calculate_portfolio_summary(curriculum, sop, evidence, evidence_items_df)
+
+if selected_sidebar_section == "🏠 Home":
+    st.markdown("## Portfolio Summary")
+    summary_cols = st.columns(5)
+
+    with summary_cols[0]:
+        st.metric("Evidence items", portfolio_summary["total_evidence_items"])
+    with summary_cols[1]:
+        st.metric("Mapped curriculum modules", portfolio_summary["mapped_curriculum_modules"])
+    with summary_cols[2]:
+        st.metric("Mapped SoP domains", portfolio_summary["mapped_sop_domains"])
+    with summary_cols[3]:
+        st.metric("Unmapped evidence items", portfolio_summary["unmapped_evidence_items"])
+    with summary_cols[4]:
+        st.metric("Curriculum coverage", f"{portfolio_summary['curriculum_coverage_pct']}%")
+
+    st.caption("Use the sidebar sections to move between curricula, evidence management, Sankey views, the dashboard, and settings.")
+
+elif selected_sidebar_section == "📖 Curricula":
+    st.markdown("## Curricula")
+    if specialty_row:
+        st.write(f"**Selected specialty:** {specialty_row.get('SpecialtyName', selected_specialty_code)}")
+        st.write(f"**Curriculum URL:** {specialty_row.get('CurriculumURL', '')}")
+        st.write(f"**Import status:** {specialty_row.get('ImportStatus', '')}")
+    else:
+        st.info("Select a specialty in the sidebar to view curriculum details.")
+
+elif view_mode == "Add evidence":
     st.subheader("New evidence entry")
 
     with st.form("add_evidence_form"):
@@ -524,9 +1073,13 @@ if view_mode == "Add evidence":
         evidence_title = st.text_input("Evidence Title", placeholder="FRCPath Part 1 Pass")
 
         st.markdown("#### Curriculum modules")
+        module_rows = curriculum[
+            curriculum["ItemType"].fillna("").astype(str).str.lower().eq("module")
+            & curriculum["CurriculumID"].fillna("").astype(str).map(storage.is_valid_module_code)
+        ].copy()
         curriculum_options = [
             f"{cid}: {ctext}"
-            for cid, ctext in zip(curriculum["CurriculumID"], curriculum["CurriculumText"])
+            for cid, ctext in zip(module_rows["CurriculumID"], module_rows["CurriculumText"])
         ]
         selected_curriculum = st.multiselect("Choose curriculum modules", options=curriculum_options)
 
@@ -548,37 +1101,17 @@ if view_mode == "Add evidence":
             elif not selected_curriculum and not selected_sop:
                 st.warning("Select at least one curriculum module or SoP criterion.")
             else:
-                new_rows = []
+                curriculum_ids = [option.split(":")[0].strip() for option in selected_curriculum]
+                sop_ids = [option.split(":")[0].strip() for option in selected_sop]
 
-                for option in selected_curriculum:
-                    curriculum_id = option.split(":")[0].strip()
-                    new_rows.append(
-                        {
-                            "EOAID": evidence_id,
-                            "EOATitle": evidence_title,
-                            "EvidenceType": evidence_type,
-                            "MappingType": "Curriculum",
-                            "TargetID": curriculum_id,
-                            "Weight": 1,
-                        }
-                    )
-
-                for option in selected_sop:
-                    sop_id = option.split(":")[0].strip()
-                    new_rows.append(
-                        {
-                            "EOAID": evidence_id,
-                            "EOATitle": evidence_title,
-                            "EvidenceType": evidence_type,
-                            "MappingType": "SoP",
-                            "TargetID": sop_id,
-                            "Weight": 1,
-                        }
-                    )
-
-                evidence = pd.concat([evidence, pd.DataFrame(new_rows)], ignore_index=True)
-                evidence = evidence.drop_duplicates()
-                save_evidence(evidence)
+                storage.upsert_evidence_item(
+                    evidence_id=evidence_id,
+                    evidence_title=evidence_title,
+                    evidence_type=evidence_type,
+                    curriculum_ids=curriculum_ids,
+                    sop_ids=sop_ids,
+                    curriculum_code=selected_specialty_code,
+                )
                 st.success(f"Saved evidence {evidence_id}: {evidence_title}")
                 st.rerun()
 
@@ -611,8 +1144,7 @@ elif view_mode == "Delete evidence":
 
             if st.button("Delete selected evidence", type="secondary"):
                 if confirm_delete:
-                    evidence = evidence[evidence["EOAID"] != delete_eoaid]
-                    save_evidence(evidence)
+                    storage.delete_evidence_item(delete_eoaid)
                     st.success(f"Deleted evidence item {delete_eoaid}: {delete_title}")
                     st.rerun()
                 else:
@@ -674,14 +1206,20 @@ elif view_mode == "Portfolio Dashboard":
         st.markdown("---")
         display_top_evidence_items(evidence)
 
-elif st.session_state.generate_sankey:
+elif selected_sidebar_section == "🔗 Sankey View" and st.session_state.generate_sankey:
     if view_mode == "Full portfolio":
         st.markdown("### Full Portfolio")
 
         if evidence.empty:
             st.info("No evidence mappings available yet.")
         else:
-            sankey_fig, node_info = build_sankey(evidence, curriculum, sop)
+            sankey_fig, node_info, debug_summary = build_sankey(
+                evidence,
+                curriculum,
+                sop,
+                selected_curriculum_code=selected_specialty_code,
+            )
+            display_sankey_debug_summary(debug_summary)
             if sankey_fig is not None:
                 st.plotly_chart(
                     sankey_fig,
@@ -704,7 +1242,14 @@ elif st.session_state.generate_sankey:
                 st.info("No mappings found for the selected evidence items.")
             else:
                 st.markdown(f"### Selected Evidence: {', '.join(selected_evidence)}")
-                sankey_fig, node_info = build_sankey(filtered, curriculum, sop)
+                sankey_fig, node_info, debug_summary = build_sankey(
+                    evidence,
+                    curriculum,
+                    sop,
+                    selected_evidence_ids=selected_evidence,
+                    selected_curriculum_code=selected_specialty_code,
+                )
+                display_sankey_debug_summary(debug_summary)
                 if sankey_fig is not None:
                     st.plotly_chart(
                         sankey_fig,
@@ -722,7 +1267,15 @@ elif st.session_state.generate_sankey:
             st.warning(f"⚠️ No evidence items found for type: **{selected_evidence_type}**")
         else:
             st.markdown(f"### Evidence Type: {selected_evidence_type}")
-            sankey_fig, node_info = build_sankey(filtered, curriculum, sop)
+            evidence_ids_for_type = filtered["EOAID"].dropna().astype(str).tolist()
+            sankey_fig, node_info, debug_summary = build_sankey(
+                evidence,
+                curriculum,
+                sop,
+                selected_evidence_ids=evidence_ids_for_type,
+                selected_curriculum_code=selected_specialty_code,
+            )
+            display_sankey_debug_summary(debug_summary)
             if sankey_fig is not None:
                 st.plotly_chart(
                     sankey_fig,
@@ -733,7 +1286,9 @@ elif st.session_state.generate_sankey:
                 st.markdown("---")
                 display_node_details(node_info, curriculum, sop)
 
-else:
-    st.info("Click **Generate Sankey** in the sidebar to visualize the mappings.")
+elif selected_sidebar_section == "⚙️ Settings":
+    st.markdown("## Settings")
+    st.info("Use the sidebar to manage backup, restore, and export options.")
 
-footer()
+else:
+    st.info("Select a section from the sidebar to continue.")
